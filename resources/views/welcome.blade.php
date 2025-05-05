@@ -5,23 +5,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>Laravel</title>
-
-        <link rel="stylesheet" href="{{ asset("vendors/feather/feather.css") }}">
-        <link rel="stylesheet" href="{{ asset("vendors/mdi/css/materialdesignicons.min.css") }}">
-        <link rel="stylesheet" href="{{ asset("vendors/ti-icons/css/themify-icons.css") }}">
-        <link rel="stylesheet" href="{{ asset("vendors/typicons/typicons.css") }}">
-        <link rel="stylesheet" href="{{ asset("vendors/simple-line-icons/css/simple-line-icons.css") }}">
-        <link rel="stylesheet" href="{{ asset("vendors/css/vendor.bundle.base.css") }}">
-        <!-- endinject -->
-        <!-- Plugin css for this page -->
-        <link rel="stylesheet" href="{{ asset("js/select.dataTables.min.css") }}">
-        <!-- End plugin css for this page -->
-        <!-- inject:css -->
-        <link rel="stylesheet" href="{{ asset("css/vertical-layout-light/style.css") }}">
-        <!-- endinject -->
-        <link rel="shortcut icon" href="{{ asset("images/favicon.png") }}" />
-
-
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
@@ -32,7 +15,6 @@
         </style>
     </head>
     <body class="antia liased">
-    @include("layouts.sidebar")
         <div class="relative sm:flex sm:justify-center sm:items-center min-h-screen bg-dots-darker bg-center bg-gray-100 dark:bg-dots-lighter dark:bg-gray-900 selection:bg-red-500 selection:text-white">
             @if (Route::has('login'))
                 <div class="sm:fixed sm:top-0 sm:right-0 p-6 text-right z-10">
