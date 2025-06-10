@@ -1,13 +1,13 @@
 <aside class="sidebar col-md-2 d-md-block p-0">
     <div class="sidebar-header p-3 text-center">
         <a href="{{ route('admin.dashboard') }}" class="text-decoration-none">
-            <h5 class="fw-bold text-white">StyleHub</h5>
+            <h5 class="fw-bold text-white">StyleHub Admin</h5>
         </a>
     </div>
     <ul class="nav flex-column mt-2">
         <li class="nav-item">
             <a class="nav-link {{ Route::is('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
-                <i class="fas fa-home me-2"></i> Панель
+                <i class="fas fa-home me-2"></i> Панель управління
             </a>
         </li>
         <li class="nav-item">
@@ -16,13 +16,28 @@
             </a>
         </li>
         <li class="nav-item">
+            <a class="nav-link {{ Route::is('admin.categories.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}">
+                <i class="fas fa-list-ul me-2"></i> Категорії
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ Route::is('admin.color.*') ? 'active' : '' }}" href="{{ route('admin.color.index') }}">
+                <i class="fas fa-palette me-2"></i> Кольори
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ Route::is('admin.sizes.*') ? 'active' : '' }}" href="{{ route('admin.sizes.index') }}">
+                <i class="fas fa-ruler me-2"></i> Розміри
+            </a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link {{ Route::is('admin.orders.*') ? 'active' : '' }}" href="{{ route('admin.orders.index') }}">
                 <i class="fas fa-shopping-cart me-2"></i> Замовлення
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ Route::is('admin.categories.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}">
-                <i class="fas fa-list-ul me-2"></i> Категорії
+            <a class="nav-link" href="{{ route('home') }}">
+                <i class="fas fa-external-link-alt me-2"></i> На сайт
             </a>
         </li>
     </ul>

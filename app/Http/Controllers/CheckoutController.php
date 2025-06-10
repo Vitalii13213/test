@@ -8,11 +8,19 @@ use Illuminate\Support\Facades\Auth;
 
 class CheckoutController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function create()
     {
         $categories = \App\Models\Category::where('is_active', true)->get();
         $cart = session('cart', []);
-        $total = array_sum(array_map(fn($item) => $item['price'] * $item['quantity'], $cart));
+        if (empty($cart)) {
+            return redirect()->route('cart.index')->with('error', 'Кошик порожній.');
+        }
+        $total = array_sum(array_map(fn ($item) => $item['price'] * $item['quantity'], $cart));
         return view('client.checkout.index', compact('categories', 'cart', 'total'));
     }
 
@@ -24,11 +32,11 @@ class CheckoutController extends Controller
             'city' => 'required|string|max:255',
             'delivery_point' => 'required|string|max:255',
             'shipment_description' => 'nullable|string|max:255',
-            'declared_value' => 'required|numeric',
-            'weight' => 'required|numeric',
-            'length' => 'required|numeric',
-            'width' => 'required|numeric',
-            'height' => 'required|numeric',
+            'declared_value' => 'required|numeric|min:0',
+            'weight' => 'required|numeric|min:0',
+            'length' => 'required|numeric|min:0',
+            'width' => 'required|numeric|min:0',
+            'height' => 'required|numeric|min:0',
         ]);
 
         $cart = session('cart', []);
@@ -36,7 +44,7 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Кошик порожній.');
         }
 
-        $total = array_sum(array_map(fn($item) => $item['price'] * $item['quantity'], $cart));
+        $total = array_sum(array_map(fn ($item) => $item['price'] * $item['quantity'], $cart));
 
         $order = Order::create([
             'user_id' => Auth::id(),
@@ -55,10 +63,12 @@ class CheckoutController extends Controller
             'date' => now(),
         ]);
 
-        foreach ($cart as $id => $item) {
-            $order->products()->attach($id, [
+        foreach ($cart as $cartKey => $item) {
+            $order->products()->attach($item['product_id'], [
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
+                'color_id' => $item['color_id'] ?? null,
+                'size_id' => $item['size_id'],
             ]);
         }
 

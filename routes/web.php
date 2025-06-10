@@ -1,77 +1,121 @@
 <?php
 
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ColorController;
+use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\SizeController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Auth\SocialiteController;
-use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
-use App\Http\Controllers\Admin\ProductController as AdminProductController;
-use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
+// Головна сторінка
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::post('/filter', [HomeController::class, 'filter'])->name('products.filter');
 
-require __DIR__.'/auth.php';
+// Товари
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{id}/customize', [ProductController::class, 'customize'])->name('products.customize');
+Route::post('/products/{id}/customize', [ProductController::class, 'storeCustomize'])->name('products.storeCustomize');
 
-Route::get('/auth/google', [SocialiteController::class, 'redirectToGoogle'])->name('auth.google');
-Route::get('/auth/google/callback', [SocialiteController::class, 'handleGoogleCallback']);
+// Категорії
+Route::get('/categories/{id}', [ProductController::class, 'index'])->name('categories.show');
 
-Route::prefix('categories')->group(function () {
-    Route::get('/{id}', [CategoryController::class, 'show'])->name('categories.show');
+// Кошик
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/add/{id}', [CartController::class, 'add'])->name('cart.add');
+Route::post('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
+Route::delete('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+
+// Чекаут
+Route::middleware('auth')->group(function () {
+    Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 });
 
-Route::prefix('products')->group(function () {
-    Route::get('/{id}', [ProductController::class, 'show'])->name('products.show');
-    Route::get('/{id}/customize', [ProductController::class, 'customize'])->name('products.customize');
-    Route::post('/{id}/customize', [ProductController::class, 'storeCustomize'])->name('products.storeCustomize');
-    Route::post('/filter', [HomeController::class, 'filter'])->name('products.filter');
-});
+// Аутентифікація
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::prefix('cart')->group(function () {
-    Route::get('/', [CartController::class, 'index'])->name('cart.index');
-    Route::post('/add/{id}', [CartController::class, 'add'])->name('cart.add');
-    Route::delete('/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
-    Route::get('/clear', [CartController::class, 'clear'])->name('cart.clear');
-});
-
-Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout');
-Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-
-Route::middleware(['auth'])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Адмін-панель
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
+    // Панель управління
     Route::get('/dashboard', function () {
-        $categories = \App\Models\Category::where('is_active', true)->get();
-        return view('admin.dashboard', compact('categories'));
+        return view('admin.dashboard');
     })->name('admin.dashboard');
 
-    Route::prefix('categories')->name('admin.categories.')->group(function () {
-        Route::get('/', [AdminCategoryController::class, 'index'])->name('index');
-        Route::get('/create', [AdminCategoryController::class, 'create'])->name('create');
-        Route::post('/', [AdminCategoryController::class, 'store'])->name('store');
-        Route::get('/{id}/edit', [AdminCategoryController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [AdminCategoryController::class, 'update'])->name('update');
-        Route::delete('/{id}', [AdminCategoryController::class, 'destroy'])->name('destroy');
-    });
+    // Товари
+    Route::resource('products', AdminProductController::class)->names([
+        'index' => 'admin.products.index',
+        'create' => 'admin.products.create',
+        'store' => 'admin.products.store',
+        'show' => 'admin.products.show',
+        'edit' => 'admin.products.edit',
+        'update' => 'admin.products.update',
+        'destroy' => 'admin.products.destroy',
+    ]);
 
-    Route::prefix('products')->name('admin.products.')->group(function () {
-        Route::get('/', [AdminProductController::class, 'index'])->name('index');
-        Route::get('/create', [AdminProductController::class, 'create'])->name('create');
-        Route::post('/', [AdminProductController::class, 'store'])->name('store');
-        Route::get('/{id}/edit', [AdminProductController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [AdminProductController::class, 'update'])->name('update');
-        Route::delete('/{id}', [AdminProductController::class, 'destroy'])->name('destroy');
-    });
+    // Категорії
+    Route::resource('categories', CategoryController::class)->names([
+        'index' => 'admin.categories.index',
+        'create' => 'admin.categories.create',
+        'store' => 'admin.categories.store',
+        'show' => 'admin.categories.show',
+        'edit' => 'admin.categories.edit',
+        'update' => 'admin.categories.update',
+        'destroy' => 'admin.categories.destroy',
+    ]);
 
-    Route::prefix('orders')->name('admin.orders.')->group(function () {
-        Route::get('/', [AdminOrderController::class, 'index'])->name('index');
-        Route::delete('/{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
-    });
+    // Кольори
+    Route::resource('color', ColorController::class)->names([
+        'index' => 'admin.color.index',
+        'create' => 'admin.color.create',
+        'store' => 'admin.color.store',
+        'show' => 'admin.color.show',
+        'edit' => 'admin.color.edit',
+        'update' => 'admin.color.update',
+        'destroy' => 'admin.color.destroy',
+    ]);
+
+    // Розміри
+    Route::resource('sizes', SizeController::class)->names([
+        'index' => 'admin.sizes.index',
+        'create' => 'admin.sizes.create',
+        'store' => 'admin.sizes.store',
+        'show' => 'admin.sizes.show',
+        'edit' => 'admin.sizes.edit',
+        'update' => 'admin.sizes.update',
+        'destroy' => 'admin.sizes.destroy',
+    ]);
+
+    // Замовлення
+    Route::resource('orders', OrderController::class)->names([
+        'index' => 'admin.orders.index',
+        'create' => 'admin.orders.create',
+        'store' => 'admin.orders.store',
+        'show' => 'admin.orders.show',
+        'edit' => 'admin.orders.edit',
+        'update' => 'admin.orders.update',
+        'destroy' => 'admin.orders.destroy',
+    ]);
 });
+
+require __DIR__.'/auth.php';

@@ -10,7 +10,7 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::with('user')->orderBy('date', 'desc')->paginate(10);
+        $orders = Order::with(['user', 'products.colors', 'products.sizes'])->orderBy('date', 'desc')->paginate(10);
         $categories = \App\Models\Category::where('is_active', true)->get();
         return view('admin.orders.index', compact('orders', 'categories'));
     }

@@ -5,10 +5,10 @@
 @section('content')
     <div class="container">
         <h3>Замовлення</h3>
-        @if(session('success'))
+        @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
-        @if($orders->isEmpty())
+        @if ($orders->isEmpty())
             <p>Замовлення відсутні.</p>
         @else
             <table class="table table-bordered">
@@ -17,6 +17,7 @@
                     <th>ID</th>
                     <th>Клієнт</th>
                     <th>Телефон</th>
+                    <th>Товари</th>
                     <th>Сума</th>
                     <th>Статус</th>
                     <th>Дата</th>
@@ -24,11 +25,23 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach($orders as $order)
+                @foreach ($orders as $order)
                     <tr>
                         <td>{{ $order->id }}</td>
                         <td>{{ $order->customer }}</td>
                         <td>{{ $order->phone }}</td>
+                        <td>
+                            @foreach ($order->products as $product)
+                                <div>
+                                    {{ $product->name }} ({{ $product->pivot->quantity }} шт.)
+                                    <br>
+                                    Колір: {{ $product->pivot->color_id ? \App\Models\Color::find($product->pivot->color_id)->name : 'Н/Д' }}
+                                    <br>
+                                    Розмір: {{ $product->pivot->size_id ? \App\Models\Size::find($product->pivot->size_id)->name : 'Н/Д' }}
+                                </div>
+                                <hr>
+                            @endforeach
+                        </td>
                         <td>{{ $order->total }} грн</td>
                         <td>{{ $order->status }}</td>
                         <td>{{ $order->date ? $order->date->format('d.m.Y H:i') : 'Н/Д' }}</td>
