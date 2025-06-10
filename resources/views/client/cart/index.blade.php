@@ -1,48 +1,50 @@
 @extends('layouts.main')
 
-@section('title', 'Кошик - StyleHub')
+@section('title', 'Кошик')
 
 @section('content')
     <div class="container">
-        <h2>Кошик</h2>
-        @if(!$products || $products->isEmpty())
-            <p>Ваш кошик порожній.</p>
-        @else
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
+        <h3>Кошик</h3>
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+        @if(!empty($cart))
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>Товар</th>
+                    <th>Ціна</th>
+                    <th>Кількість</th>
+                    <th>Сума</th>
+                    <th>Дія</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($cart as $id => $item)
                     <tr>
-                        <th>Товар</th>
-                        <th>Ціна</th>
-                        <th>Кількість</th>
-                        <th>Сума</th>
-                        <th>Дії</th>
+                        <td>{{ $item['name'] }}</td>
+                        <td>{{ $item['price'] }} грн</td>
+                        <td>{{ $item['quantity'] }}</td>
+                        <td>{{ $item['price'] * $item['quantity'] }} грн</td>
+                        <td>
+                            <form action="{{ route('cart.remove', $id) }}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm">Видалити</button>
+                            </form>
+                        </td>
                     </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($products as $product)
-                        @if(isset($cart[$product->id]))
-                            <tr>
-                                <td>{{ $product->name }}</td>
-                                <td>{{ number_format($product->price, 2) }} грн</td>
-                                <td>{{ $cart[$product->id] }}</td>
-                                <td>{{ number_format($product->price * $cart[$product->id], 2) }} грн</td>
-                                <td>
-                                    <form action="{{ route('cart.remove', $product->id) }}" method="POST">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm">Видалити</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endif
-                    @endforeach
-                    </tbody>
-                </table>
-            </div>
-            @if(Route::has('checkout'))
-                <a href="{{ route('checkout') }}" class="btn btn-primary">Оформити замовлення</a>
-            @endif
+                @endforeach
+                </tbody>
+            </table>
+            <p><strong>Загальна сума: {{ array_sum(array_map(fn($item) => $item['price'] * $item['quantity'], $cart)) }} грн</strong></p>
+            <a href="{{ route('checkout') }}" class="btn btn-primary">Оформити замовлення</a>
+            <a href="{{ route('cart.clear') }}" class="btn btn-secondary">Очистити кошик</a>
+        @else
+            <p>Кошик порожній.</p>
         @endif
     </div>
 @endsection

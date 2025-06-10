@@ -11,18 +11,19 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
-            $table->string('customer');
+            $table->string('customer')->nullable();
             $table->string('phone');
-            $table->text('shipment_description')->nullable();
-            $table->decimal('weight', 8, 2)->nullable();
-            $table->decimal('length', 8, 2)->nullable();
-            $table->decimal('width', 8, 2)->nullable();
-            $table->decimal('height', 8, 2)->nullable();
+            $table->string('shipment_description')->nullable();
+            $table->decimal('declared_value', 10, 2);
+            $table->decimal('weight', 10, 2);
+            $table->decimal('length', 10, 2);
+            $table->decimal('width', 10, 2);
+            $table->decimal('height', 10, 2);
             $table->string('city');
             $table->string('delivery_point');
-            $table->decimal('total', 8, 2);
+            $table->decimal('total', 10, 2);
             $table->string('status')->default('pending');
-            $table->dateTime('date');
+            $table->date('date')->nullable();
             $table->timestamps();
         });
     }

@@ -1,54 +1,49 @@
 @extends('layouts.main')
 
-@section('title', 'Замовлення - Адмін-панель')
+@section('title', 'Замовлення')
 
 @section('content')
     <div class="container">
-        <h2>Замовлення</h2>
+        <h3>Замовлення</h3>
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
         @if($orders->isEmpty())
-            <p>Немає замовлень.</p>
+            <p>Замовлення відсутні.</p>
         @else
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Клієнт</th>
+                    <th>Телефон</th>
+                    <th>Сума</th>
+                    <th>Статус</th>
+                    <th>Дата</th>
+                    <th>Дія</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($orders as $order)
                     <tr>
-                        <th>ID</th>
-                        <th>Клієнт</th>
-                        <th>Телефон</th>
-                        <th>Місто</th>
-                        <th>Пункт доставки</th>
-                        <th>Сума</th>
-                        <th>Статус</th>
-                        <th>Дата</th>
-                        <th>Дії</th>
+                        <td>{{ $order->id }}</td>
+                        <td>{{ $order->customer }}</td>
+                        <td>{{ $order->phone }}</td>
+                        <td>{{ $order->total }} грн</td>
+                        <td>{{ $order->status }}</td>
+                        <td>{{ $order->date ? $order->date->format('d.m.Y H:i') : 'Н/Д' }}</td>
+                        <td>
+                            <form action="{{ route('admin.orders.destroy', $order->id) }}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm">Видалити</button>
+                            </form>
+                        </td>
                     </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($orders as $order)
-                        <tr>
-                            <td>{{ $order->id }}</td>
-                            <td>{{ $order->customer }}</td>
-                            <td>{{ $order->phone }}</td>
-                            <td>{{ $order->city }}</td>
-                            <td>{{ $order->delivery_point }}</td>
-                            <td>{{ number_format($order->total, 2) }} грн</td>
-                            <td>{{ $order->status }}</td>
-                            <td>{{ $order->date->format('d.m.Y H:i') }}</td>
-                            <td>
-                                <form action="{{ route('admin.orders.destroy', $order->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Ви впевнені?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">Видалити</button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                    </tbody>
-                </table>
-            </div>
+                @endforeach
+                </tbody>
+            </table>
+            {{ $orders->links() }}
         @endif
     </div>
 @endsection

@@ -13,14 +13,23 @@ class ProfileController extends Controller
 {
     public function edit(Request $request): View
     {
+        $categories = \App\Models\Category::where('is_active', true)->get();
         return view('profile.edit', [
             'user' => $request->user(),
+            'categories' => $categories,
         ]);
     }
 
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $validated = $request->validated();
+
+        $request->user()->fill(array_merge($validated, [
+            'phone' => $request->phone,
+            'full_name' => $request->full_name,
+            'city' => $request->city,
+            'nova_poshta_branch' => $request->nova_poshta_branch,
+        ]));
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;

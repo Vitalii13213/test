@@ -4,6 +4,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
@@ -33,12 +34,11 @@ Route::prefix('cart')->group(function () {
     Route::get('/', [CartController::class, 'index'])->name('cart.index');
     Route::post('/add/{id}', [CartController::class, 'add'])->name('cart.add');
     Route::delete('/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::get('/clear', [CartController::class, 'clear'])->name('cart.clear');
 });
 
-Route::get('/checkout', function () {
-    $categories = \App\Models\Category::where('is_active', true)->get();
-    return view('client.checkout.index', compact('categories'));
-})->name('checkout');
+Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout');
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

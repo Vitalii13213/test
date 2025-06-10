@@ -4,33 +4,49 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
 
 class CartController extends Controller
 {
     public function index()
     {
-        $cart = Session::get('cart', []);
-        $products = Product::whereIn('id', array_keys($cart))->get();
-        return view('client.cart.index', compact('products', 'cart'));
+        $categories = \App\Models\Category::where('is_active', true)->get();
+        $cart = session('cart', []);
+        return view('client.cart.index', compact('cart', 'categories'));
     }
 
-    public function add($id)
+    public function add(Request $request, $id)
     {
         $product = Product::findOrFail($id);
-        $cart = Session::get('cart', []);
-        $cart[$id] = ($cart[$id] ?? 0) + 1;
-        Session::put('cart', $cart);
-        return redirect()->back()->with('success', 'Товар додано до кошика');
+        $cart = session('cart', []);
+
+        if (isset($cart[$id])) {
+            $cart[$id]['quantity'] += $request->input('quantity', 1);
+        } else {
+            $cart[$id] = [
+                'name' => $product->name,
+                'price' => $product->price,
+                'quantity' => $request->input('quantity', 1),
+                'image' => $product->image,
+            ];
+        }
+
+        session(['cart' => $cart]);
+        return redirect()->route('cart.index')->with('success', 'Товар додано до кошика.');
     }
 
     public function remove($id)
     {
-        $cart = Session::get('cart', []);
+        $cart = session('cart', []);
         if (isset($cart[$id])) {
             unset($cart[$id]);
-            Session::put('cart', $cart);
+            session(['cart' => $cart]);
         }
-        return redirect()->back()->with('success', 'Товар видалено з кошика');
+        return redirect()->route('cart.index')->with('success', 'Товар видалено з кошика.');
+    }
+
+    public function clear()
+    {
+        session()->forget('cart');
+        return redirect()->route('cart.index')->with('success', 'Кошик очищено.');
     }
 }

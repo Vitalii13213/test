@@ -1,66 +1,90 @@
-<nav class="admin-sidebar navbar navbar-expand navbar-dark bg-primary shadow-sm">
-    <div class="container-fluid">
-        <span class="navbar-brand fs-6">StyleHub Admin</span>
-        <div class="collapse navbar-collapse" id="adminSidebarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link {{ Route::is('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" title="Панель">
-                        <i class="fas fa-tachometer-alt"></i>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ Route::is('admin.products.*') ? 'active' : '' }}" href="{{ route('admin.products.index') }}" title="Товари">
-                        <i class="fas fa-tshirt"></i>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ Route::is('admin.orders.*') ? 'active' : '' }}" href="{{ route('admin.orders.index') }}" title="Замовлення">
-                        <i class="fas fa-shopping-cart"></i>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ Route::is('admin.categories.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}" title="Категорії">
-                        <i class="fas fa-list"></i>
-                    </a>
-                </li>
-            </ul>
-        </div>
+<aside class="sidebar col-md-2 d-md-block p-0">
+    <div class="sidebar-header p-3 text-center">
+        <a href="{{ route('admin.dashboard') }}" class="text-decoration-none">
+            <h5 class="fw-bold text-white">StyleHub</h5>
+        </a>
     </div>
-</nav>
+    <ul class="nav flex-column mt-2">
+        <li class="nav-item">
+            <a class="nav-link {{ Route::is('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
+                <i class="fas fa-home me-2"></i> Панель
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ Route::is('admin.products.*') ? 'active' : '' }}" href="{{ route('admin.products.index') }}">
+                <i class="fas fa-tshirt me-2"></i> Товари
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ Route::is('admin.orders.*') ? 'active' : '' }}" href="{{ route('admin.orders.index') }}">
+                <i class="fas fa-shopping-cart me-2"></i> Замовлення
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ Route::is('admin.categories.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}">
+                <i class="fas fa-list-ul me-2"></i> Категорії
+            </a>
+        </li>
+    </ul>
+</aside>
 
 <style>
-    .admin-sidebar {
-        position: sticky;
+    .sidebar {
+        background: #0a192f;
+        height: 100vh;
+        position: fixed;
         top: 0;
+        left: 0;
+        overflow-y: auto;
         z-index: 1000;
-        padding: 0;
     }
-    .admin-sidebar .nav-link {
-        color: #fff;
-        font-size: 1.5rem;
-        padding: 10px 15px;
-        margin: 0 5px;
-        border-radius: 5px;
-        transition: transform 0.2s ease, background 0.2s ease;
+    .sidebar-header {
+        background: #112240;
+        border-bottom: 1px solid #1e3a8a;
     }
-    .admin-sidebar .nav-link:hover {
-        background: #0056b3;
-        transform: scale(1.1);
+    .nav-link {
+        color: #93c5fd !important;
+        padding: 12px 20px !important;
+        margin: 4px 10px !important;
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+        font-size: 0.95rem !important;
     }
-    .admin-sidebar .nav-link.active {
-        background: #003d80;
+    .nav-link:hover {
+        color: #fff !important;
+        background: #1e40af !important;
+        transform: translateY(-2px) !important;
     }
-    .admin-sidebar .nav-link i {
-        display: block;
+    .nav-link.active {
+        color: #fff !important;
+        background: #2563eb !important;
+    }
+    .nav-link i {
+        width: 20px;
         text-align: center;
     }
     @media (max-width: 767.98px) {
-        .admin-sidebar .navbar-collapse {
-            background: #004085;
+        .sidebar {
+            width: 200px;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
         }
-        .admin-sidebar .nav-link {
-            font-size: 1.2rem;
-            padding: 8px 10px;
+        .sidebar.open {
+            transform: translateX(0);
         }
     }
 </style>
+
+@section('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.querySelector('.sidebar');
+            const toggler = document.querySelector('.sidebar-toggler');
+            if (toggler) {
+                toggler.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                });
+            }
+        });
+    </script>
+@endsection
