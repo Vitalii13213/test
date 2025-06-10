@@ -2,76 +2,59 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
 
 class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Session::get('orders', [
-            [
-                'id' => 101,
-                'customer' => 'Смит Джон Іванович',
-                'phone' => '+380671234567',
-                'shipment_description' => 'Одяг',
-                'weight' => 1.5,
-                'length' => 30,
-                'width' => 20,
-                'height' => 10,
-                'city' => 'Київ',
-                'delivery_point' => 'Відділення Нової Пошти №45',
-                'total' => 89.98,
-                'status' => 'Pending',
-                'date' => '2025-05-01'
-            ],
-            [
-                'id' => 102,
-                'customer' => 'Доу Джейн Петрівна',
-                'phone' => '+380681234567',
-                'shipment_description' => 'Одяг',
-                'weight' => 2.0,
-                'length' => 40,
-                'width' => 25,
-                'height' => 15,
-                'city' => 'Львів',
-                'delivery_point' => 'Поштомат №123',
-                'total' => 129.97,
-                'status' => 'Shipped',
-                'date' => '2025-05-02'
-            ],
-            [
-                'id' => 103,
-                'customer' => 'Браун Аліса Олегівна',
-                'phone' => '+380691234567',
-                'shipment_description' => 'Одяг',
-                'weight' => 0.8,
-                'length' => 25,
-                'width' => 15,
-                'height' => 8,
-                'city' => 'Одеса',
-                'delivery_point' => 'Відділення Нової Пошти №12',
-                'total' => 49.99,
-                'status' => 'Delivered',
-                'date' => '2025-05-03'
-            ],
-        ]);
+        $orders = Order::with('products')->get();
+        return view('admin.orders.index', compact('orders'));
+    }
 
-        return view('orders.index', compact('orders'));
+    public function cart()
+    {
+        $cart = session()->get('cart', []);
+        $productIds = array_keys($cart);
+        $products = Product::whereIn('id', $productIds)->get();
+        $categories = Category::where('is_active', true)->get();
+        return view('client.cart.index', compact('products', 'cart', 'categories'));
+    }
+
+    public function addToCart(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+        $cart = session()->get('cart', []);
+        $quantity = $request->input('quantity', 1);
+
+        if (isset($cart[$id])) {
+            $cart[$id]['quantity'] += $quantity;
+        } else {
+            $cart[$id] = [
+                'quantity' => $quantity,
+                'price' => $product->price,
+            ];
+        }
+
+        session()->put('cart', $cart);
+        return redirect()->route('cart.index')->with('success', 'Товар додано до кошика.');
+    }
+
+    public function removeFromCart($id)
+    {
+        $cart = session()->get('cart', []);
+        unset($cart[$id]);
+        session()->put('cart', $cart);
+        return redirect()->route('cart.index')->with('success', 'Товар видалено з кошика.');
     }
 
     public function destroy($id)
     {
-        $orders = Session::get('orders', []);
-        $orderIndex = collect($orders)->search(fn($item) => $item['id'] == $id);
-
-        if ($orderIndex === false) {
-            return redirect()->route('admin.orders')->with('error', 'Order not found.');
-        }
-
-        unset($orders[$orderIndex]);
-        Session::put('orders', array_values($orders));
-
-        return redirect()->route('admin.orders')->with('success', 'Order deleted successfully.');
+        $order = Order::findOrFail($id);
+        $order->delete();
+        return redirect()->route('admin.orders')->with('success', 'Замовлення видалено.');
     }
 }
