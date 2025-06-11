@@ -1,13 +1,13 @@
 @extends('layouts.main')
 
-@section('title', 'Редагувати колір')
+@section('title', 'Редагувати колір - Адмін')
 
 @section('content')
-    <div class="container">
-        <h3>Редагувати колір</h3>
-        <form action="{{ route('admin.color.update', $color->id) }}" method="POST">
+    <div class="container-fluid">
+        <h2>Редагувати колір</h2>
+        <form method="POST" action="{{ route('admin.color.update', $color->id) }}">
             @csrf
-            @method('PUT')
+            @method('PATCH')
             <div class="mb-3">
                 <label for="name" class="form-label">Назва</label>
                 <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $color->name) }}" required>
@@ -17,10 +17,7 @@
             </div>
             <div class="mb-3">
                 <label for="hex" class="form-label">Колір</label>
-                <div class="d-flex align-items-center">
-                    <input type="color" name="hex" id="hex" value="{{ old('hex', $color->hex) }}" required>
-                    <input type="text" id="hex-text" class="form-control ms-2" value="{{ old('hex', $color->hex) }}" readonly>
-                </div>
+                <input type="color" name="hex" id="hex" class="form-control form-control-color" value="{{ old('hex', $color->hex) }}" required>
                 @error('hex')
                 <div class="text-danger">{{ $message }}</div>
                 @enderror
@@ -28,14 +25,4 @@
             <button type="submit" class="btn btn-primary">Оновити</button>
         </form>
     </div>
-@endsection
-
-@section('scripts')
-    <script>
-        const colorPicker = document.getElementById('hex');
-        const hexText = document.getElementById('hex-text');
-        colorPicker.addEventListener('input', () => {
-            hexText.value = colorPicker.value.toUpperCase();
-        });
-    </script>
 @endsection

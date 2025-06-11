@@ -1,11 +1,11 @@
 @extends('layouts.main')
 
-@section('title', 'Додати розмір')
+@section('title', 'Додати розмір - Адмін')
 
 @section('content')
-    <div class="container">
-        <h3>Додати розмір</h3>
-        <form action="{{ route('admin.sizes.store') }}" method="POST">
+    <div class="container-fluid">
+        <h2>Додати розмір</h2>
+        <form method="POST" action="{{ route('admin.sizes.store') }}">
             @csrf
             <div class="mb-3">
                 <label for="name" class="form-label">Назва</label>
@@ -14,7 +14,7 @@
                 <div class="text-danger">{{ $message }}</div>
                 @enderror
             </div>
-            <button type="submit" class="btn btn-primary">Додати</button>
+            <button type="submit" class="btn btn-primary">Зберегти</button>
         </form>
     </div>
 @endsection

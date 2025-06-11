@@ -52,54 +52,80 @@
                     </div>
                     <div class="mb-3">
                         <label for="length" class="form-label">Довжина (см)</label>
-                        <input type="number" name="length" id="length" class="form-control" value="15" required>
+                        <input type="number" name="length" id="length" class="form-control" value="20" required>
                         @error('length')
                         <div class="text-danger">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-3">
                         <label for="width" class="form-label">Ширина (см)</label>
-                        <input type="number" name="width" id="width" class="form-control" value="15" required>
+                        <input type="number" name="width" id="width" class="form-control" value="20" required>
                         @error('width')
                         <div class="text-danger">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-3">
                         <label for="height" class="form-label">Висота (см)</label>
-                        <input type="number" name="height" id="height" class="form-control" value="5" required>
+                        <input type="number" name="height" id="height" class="form-control" value="10" required>
                         @error('height')
                         <div class="text-danger">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-3">
+                        <label for="surname" class="form-label">Прізвище</label>
+                        <input type="text" name="surname" id="surname" class="form-control" value="{{ old('surname', Auth::user()->surname) }}" required>
+                        @error('surname')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="first_name" class="form-label">Ім'я</label>
+                        <input type="text" name="first_name" id="first_name" class="form-control" value="{{ old('first_name', Auth::user()->first_name) }}" required>
+                        @error('first_name')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="patronymic" class="form-label">По батькові</label>
+                        <input type="text" name="patronymic" id="patronymic" class="form-control" value="{{ old('patronymic', Auth::user()->patronymic) }}" required>
+                        @error('patronymic')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
                         <label for="phone" class="form-label">Телефон</label>
-                        <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone', Auth::user()->phone ?? '') }}" required>
+                        <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone', Auth::user()->phone) }}" required>
                         @error('phone')
                         <div class="text-danger">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="full_name" class="form-label">ПІБ</label>
-                        <input type="text" name="full_name" id="full_name" class="form-control" value="{{ old('full_name', Auth::user()->name ?? '') }}" required>
-                        @error('full_name')
-                        <div class="text-danger">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="mb-3">
                         <label for="city" class="form-label">Місто</label>
-                        <input type="text" name="city" id="city" class="form-control" value="{{ old('city') }}" required autocomplete="off">
+                        <input type="text" name="city" id="city" class="form-control" value="{{ old('city', Auth::user()->city) }}" required autocomplete="off">
                         <div id="city-suggestions" class="list-group" style="position: absolute; z-index: 1000; width: 100%;"></div>
                         @error('city')
                         <div class="text-danger">{{ $message }}</div>
                         @enderror
+                        <!-- TODO: Інтеграція API Нової Пошти для автодоповнення міст -->
                     </div>
                     <div class="mb-3">
-                        <label for="delivery_point" class="form-label">Відділення Нової Пошти</label>
-                        <input type="text" name="delivery_point" id="delivery_point" class="form-control" value="{{ old('delivery_point') }}" required autocomplete="off">
+                        <label for="delivery_type" class="form-label">Тип доставки</label>
+                        <select name="delivery_type" id="delivery_type" class="form-control" required>
+                            <option value="warehouse">Відділення</option>
+                            <option value="postomat">Поштомат</option>
+                        </select>
+                        @error('delivery_type')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="delivery_point" class="form-label">Відділення/Поштомат Нової Пошти</label>
+                        <input type="text" name="delivery_point" id="delivery_point" class="form-control" value="{{ old('delivery_point', Auth::user()->delivery_point) }}" required autocomplete="off">
                         <div id="delivery-point-suggestions" class="list-group" style="position: absolute; z-index: 1000; width: 100%;"></div>
                         @error('delivery_point')
                         <div class="text-danger">{{ $message }}</div>
                         @enderror
+                        <!-- TODO: Інтеграція API Нової Пошти для автодоповнення відділень/поштоматів -->
                     </div>
                     <button type="submit" class="btn btn-primary">Оформити замовлення</button>
                 </form>
@@ -115,11 +141,12 @@
 
 @section('scripts')
     <script>
+        // Заготовка для автодоповнення через API Нової Пошти
         const cityInput = document.getElementById('city');
         const citySuggestions = document.getElementById('city-suggestions');
         const deliveryPointInput = document.getElementById('delivery_point');
         const deliveryPointSuggestions = document.getElementById('delivery-point-suggestions');
-        let selectedCityRef = '';
+        let selectedCityRef = '{{ Auth::user()->city_ref ?? '' }}';
 
         cityInput.addEventListener('input', debounce(async () => {
             const query = cityInput.value.trim();
@@ -127,28 +154,12 @@
                 citySuggestions.innerHTML = '';
                 return;
             }
-
-            const response = await fetch('/api/nova-poshta/cities', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query })
-            });
-            const data = await response.json();
-            citySuggestions.innerHTML = '';
-            if (data.success && data.data.length) {
-                data.data.forEach(city => {
-                    const item = document.createElement('a');
-                    item.classList.add('list-group-item', 'list-group-item-action');
-                    item.textContent = city.Description;
-                    item.addEventListener('click', () => {
-                        cityInput.value = city.Description;
-                        selectedCityRef = city.Ref;
-                        citySuggestions.innerHTML = '';
-                        deliveryPointInput.value = '';
-                    });
-                    citySuggestions.appendChild(item);
-                });
-            }
+            // TODO: Виклик API Нової Пошти для пошуку міст
+            // Приклад:
+            // const response = await fetch('/api/nova-poshta/cities', { ... });
+            // const data = await response.json();
+            // citySuggestions.innerHTML = '';
+            // data.data.forEach(city => { ... });
         }, 300));
 
         deliveryPointInput.addEventListener('input', debounce(async () => {
@@ -157,26 +168,12 @@
                 deliveryPointSuggestions.innerHTML = '';
                 return;
             }
-
-            const response = await fetch('/api/nova-poshta/warehouses', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cityRef: selectedCityRef, query })
-            });
-            const data = await response.json();
-            deliveryPointSuggestions.innerHTML = '';
-            if (data.success && data.data.length) {
-                data.data.forEach(warehouse => {
-                    const item = document.createElement('a');
-                    item.classList.add('list-group-item', 'list-group-item-action');
-                    item.textContent = warehouse.Description;
-                    item.addEventListener('click', () => {
-                        deliveryPointInput.value = warehouse.Description;
-                        deliveryPointSuggestions.innerHTML = '';
-                    });
-                    deliveryPointSuggestions.appendChild(item);
-                });
-            }
+            // TODO: Виклик API Нової Пошти для пошуку відділень/поштоматів
+            // Приклад:
+            // const response = await fetch('/api/nova-poshta/warehouses', { ... });
+            // const data = await response.json();
+            // deliveryPointSuggestions.innerHTML = '';
+            // data.data.forEach(warehouse => { ... });
         }, 300));
 
         function debounce(func, wait) {

@@ -4,14 +4,11 @@
 
 @section('content')
     <div class="container">
-        <h3>Кошик</h3>
-        @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-        @if (session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
-        @endif
-        @if (!empty($cart))
+        <h2>Кошик</h2>
+        @if (empty($cart))
+            <p>Ваш кошик порожній.</p>
+            <a href="{{ route('products.index') }}" class="btn btn-primary">Продовжити покупки</a>
+        @else
             <table class="table table-bordered">
                 <thead>
                 <tr>
@@ -21,7 +18,7 @@
                     <th>Ціна</th>
                     <th>Кількість</th>
                     <th>Сума</th>
-                    <th>Дія</th>
+                    <th>Дії</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -29,15 +26,25 @@
                     <tr>
                         <td>{{ $item['name'] }}</td>
                         <td>
-                            <div style="width: 20px; height: 20px; background-color: {{ $item['color_hex'] }}; border: 1px solid #ccc; display: inline-block;"></div>
+                            <span style="display: inline-block; width: 20px; height: 20px; background-color: {{ $item['color_hex'] ?? '#ffffff' }}; border: 1px solid #ddd;"></span>
                             {{ $item['color_name'] }}
                         </td>
                         <td>{{ $item['size_name'] }}</td>
-                        <td>{{ $item['price'] }} грн</td>
-                        <td>{{ $item['quantity'] }}</td>
-                        <td>{{ $item['price'] * $item['quantity'] }} грн</td>
+                        <td>{{ number_format($item['price'], 2) }} грн</td>
                         <td>
-                            <form action="{{ route('cart.remove', $cartKey) }}" method="POST">
+                            <div class="quantity-control">
+                                <form action="{{ route('cart.update', $cartKey) }}" method="POST" style="display: inline;">
+                                    @csrf
+                                    @method('POST')
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm" name="quantity" value="{{ $item['quantity'] - 1 }}" {{ $item['quantity'] <= 1 ? 'disabled' : '' }}>-</button>
+                                    <span class="quantity">{{ $item['quantity'] }}</span>
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm" name="quantity" value="{{ $item['quantity'] + 1 }}" {{ $item['quantity'] >= ($item['stock'] ?? 1000) ? 'disabled' : '' }}>+</button>
+                                </form>
+                            </div>
+                        </td>
+                        <td>{{ number_format($item['price'] * $item['quantity'], 2) }} грн</td>
+                        <td>
+                            <form action="{{ route('cart.remove', $cartKey) }}" method="POST" style="display: inline;">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger btn-sm">Видалити</button>
@@ -47,11 +54,26 @@
                 @endforeach
                 </tbody>
             </table>
-            <p><strong>Загальна сума: {{ array_sum(array_map(fn ($item) => $item['price'] * $item['quantity'], $cart)) }} грн</strong></p>
-            <a href="{{ route('checkout.create') }}" class="btn btn-primary">Оформити замовлення</a>
-            <a href="{{ route('cart.clear') }}" class="btn btn-secondary">Очистити кошик</a>
-        @else
-            <p>Кошик порожній.</p>
+            <p>Загальна сума: {{ number_format($total, 2) }} грн</p>
+            <div class="d-flex justify-content-between">
+                <a href="{{ route('products.index') }}" class="btn btn-secondary">Продовжити покупки</a>
+                <a href="{{ route('checkout.create') }}" class="btn btn-primary">Оформити замовлення</a>
+            </div>
         @endif
     </div>
+
+    <style>
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .quantity {
+            min-width: 30px;
+            text-align: center;
+        }
+        .btn-sm {
+            padding: 2px 8px;
+        }
+    </style>
 @endsection

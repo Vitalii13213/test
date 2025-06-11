@@ -1,62 +1,39 @@
 @extends('layouts.main')
 
-@section('title', 'Замовлення')
+@section('title', 'Замовлення - Адмін')
 
 @section('content')
-    <div class="container">
-        <h3>Замовлення</h3>
-        @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-        @if ($orders->isEmpty())
+    <div class="container-fluid">
+        <h2>Замовлення</h2>
+        @if($orders->isEmpty())
             <p>Замовлення відсутні.</p>
         @else
             <table class="table table-bordered">
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Клієнт</th>
-                    <th>Телефон</th>
-                    <th>Товари</th>
+                    <th>Користувач</th>
                     <th>Сума</th>
                     <th>Статус</th>
                     <th>Дата</th>
-                    <th>Дія</th>
+                    <th>Дії</th>
                 </tr>
                 </thead>
                 <tbody>
-                @foreach ($orders as $order)
+                @foreach($orders as $order)
                     <tr>
                         <td>{{ $order->id }}</td>
-                        <td>{{ $order->customer }}</td>
-                        <td>{{ $order->phone }}</td>
-                        <td>
-                            @foreach ($order->products as $product)
-                                <div>
-                                    {{ $product->name }} ({{ $product->pivot->quantity }} шт.)
-                                    <br>
-                                    Колір: {{ $product->pivot->color_id ? \App\Models\Color::find($product->pivot->color_id)->name : 'Н/Д' }}
-                                    <br>
-                                    Розмір: {{ $product->pivot->size_id ? \App\Models\Size::find($product->pivot->size_id)->name : 'Н/Д' }}
-                                </div>
-                                <hr>
-                            @endforeach
-                        </td>
-                        <td>{{ $order->total }} грн</td>
+                        <td>{{ $order->user->email }}</td>
+                        <td>{{ number_format($order->total_amount, 2) }} грн</td>
                         <td>{{ $order->status }}</td>
-                        <td>{{ $order->date ? $order->date->format('d.m.Y H:i') : 'Н/Д' }}</td>
+                        <td>{{ $order->created_at->format('d.m.Y H:i') }}</td>
                         <td>
-                            <form action="{{ route('admin.orders.destroy', $order->id) }}" method="POST">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm">Видалити</button>
-                            </form>
+                            <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-sm btn-info">Переглянути</a>
                         </td>
                     </tr>
                 @endforeach
                 </tbody>
             </table>
-            {{ $orders->links() }}
         @endif
     </div>
 @endsection

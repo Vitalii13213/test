@@ -18,20 +18,22 @@ class SocialiteController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->user();
+
             $user = User::updateOrCreate(
                 ['email' => $googleUser->email],
                 [
-                    'name' => $googleUser->name,
-                    'google_id' => $googleUser->id,
+                    'name' => $googleUser->name ?? 'Google User',
+                    'provider' => 'google',
+                    'provider_id' => $googleUser->id,
                     'email_verified_at' => now(),
                 ]
             );
 
             Auth::login($user, true);
-            return redirect()->intended(route('home'));
+
+            return redirect()->intended('/')->with('success', 'Successfully logged in with Google.');
         } catch (\Exception $e) {
-            \Log::error('Google OAuth error: ' . $e->getMessage());
-            return redirect()->route('login')->with('error', 'Не вдалося увійти через Google.');
+            return redirect('/login')->with('error', 'Google login failed.');
         }
     }
 }

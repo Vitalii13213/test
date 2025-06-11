@@ -26,6 +26,7 @@ class SizeController extends Controller
         ]);
 
         Size::create($request->all());
+
         return redirect()->route('admin.sizes.index')->with('success', 'Розмір додано.');
     }
 
@@ -43,6 +44,7 @@ class SizeController extends Controller
 
         $size = Size::findOrFail($id);
         $size->update($request->all());
+
         return redirect()->route('admin.sizes.index')->with('success', 'Розмір оновлено.');
     }
 
@@ -50,6 +52,7 @@ class SizeController extends Controller
     {
         $size = Size::findOrFail($id);
         $size->delete();
+
         return redirect()->route('admin.sizes.index')->with('success', 'Розмір видалено.');
     }
 }

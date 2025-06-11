@@ -1,13 +1,16 @@
 @extends('layouts.main')
 
-@section('title', 'Редагувати товар')
+@section('title', 'Редагувати товар - Адмін')
 
 @section('content')
-    <div class="container">
-        <h3>Редагувати товар</h3>
-        <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
+    <div class="container-fluid">
+        <h2>Редагувати товар</h2>
+        <div class="mb-3">
+            <a href="{{ route('admin.products.index', ['show_inactive' => $showInactive]) }}" class="btn btn-secondary">Повернутися до списку</a>
+        </div>
+        <form method="POST" action="{{ route('admin.products.update', $product->id) }}" enctype="multipart/form-data">
             @csrf
-            @method('PUT')
+            @method('PATCH')
             <div class="mb-3">
                 <label for="name" class="form-label">Назва</label>
                 <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $product->name) }}" required>
@@ -16,33 +19,23 @@
                 @enderror
             </div>
             <div class="mb-3">
+                <label for="description" class="form-label">Опис</label>
+                <textarea name="description" id="description" class="form-control">{{ old('description', $product->description) }}</textarea>
+                @error('description')
+                <div class="text-danger">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="mb-3">
                 <label for="price" class="form-label">Ціна</label>
-                <input type="number" name="price" id="price" class="form-control" value="{{ old('price', $product->price) }}" required>
+                <input type="number" name="price" id="price" class="form-control" value="{{ old('price', $product->price) }}" step="0.01" required>
                 @error('price')
                 <div class="text-danger">{{ $message }}</div>
                 @enderror
             </div>
             <div class="mb-3">
-                <label for="stock" class="form-label">Наявність (кількість)</label>
-                <input type="number" name="stock" id="stock" class="form-control" value="{{ old('stock', $product->stock) }}" min="0" required>
+                <label for="stock" class="form-label">Наявність</label>
+                <input type="number" name="stock" id="stock" class="form-control" value="{{ old('stock', $product->stock) }}" required>
                 @error('stock')
-                <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-            <div class="mb-3">
-                <label for="image" class="form-label">Зображення</label>
-                <input type="file" name="image" id="image" class="form-control">
-                @if ($product->image)
-                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" width="100" class="mt-2">
-                @endif
-                @error('image')
-                <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-            <div class="mb-3">
-                <label for="description" class="form-label">Опис</label>
-                <textarea name="description" id="description" class="form-control">{{ old('description', $product->description) }}</textarea>
-                @error('description')
                 <div class="text-danger">{{ $message }}</div>
                 @enderror
             </div>
@@ -58,31 +51,51 @@
                 @enderror
             </div>
             <div class="mb-3">
-                <label for="is_active" class="form-label">Активний</label>
-                <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', $product->is_active) ? 'checked' : '' }}>
-                @error('is_active')
+                <label for="image" class="form-label">Зображення</label>
+                <input type="file" name="image" id="image" class="form-control">
+                @if ($product->image_path)
+                    <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}" style="max-width: 100px; margin-top: 10px;">
+                @endif
+                @error('image')
                 <div class="text-danger">{{ $message }}</div>
                 @enderror
             </div>
             <div class="mb-3">
-                <label for="colors" class="form-label">Кольори (утримуйте Ctrl для вибору кількох)</label>
-                <select name="colors[]" id="colors" class="form-control" multiple>
+                <label class="form-label">Кольори</label>
+                <div class="d-flex flex-wrap">
                     @foreach ($colors as $color)
-                        <option value="{{ $color->id }}" {{ $product->colors->contains($color->id) ? 'selected' : '' }}>{{ $color->name }} ({{ $color->hex }})</option>
+                        <div class="form-check me-3">
+                            <input type="checkbox" name="colors[]" id="color_{{ $color->id }}" value="{{ $color->id }}" class="form-check-input" {{ $product->colors->contains($color->id) ? 'checked' : '' }}>
+                            <label for="color_{{ $color->id }}" class="form-check-label" style="background-color: {{ $color->hex ?? '#ffffff' }}; width: 30px; height: 30px; display: inline-block; border: 1px solid #ddd;" title="{{ $color->name }}"></label>
+                            <span>{{ $color->name }}</span>
+                        </div>
                     @endforeach
-                </select>
+                </div>
                 @error('colors')
                 <div class="text-danger">{{ $message }}</div>
                 @enderror
             </div>
             <div class="mb-3">
-                <label for="sizes" class="form-label">Розміри (утримуйте Ctrl для вибору кількох)</label>
-                <select name="sizes[]" id="sizes" class="form-control" multiple>
+                <label class="form-label">Розміри</label>
+                <div class="d-flex flex-wrap">
                     @foreach ($sizes as $size)
-                        <option value="{{ $size->id }}" {{ $product->sizes->contains($size->id) ? 'selected' : '' }}>{{ $size->name }}</option>
+                        <div class="form-check me-3">
+                            <input type="checkbox" name="sizes[]" id="size_{{ $size->id }}" value="{{ $size->id }}" class="form-check-input" {{ $product->sizes->contains($size->id) ? 'checked' : '' }}>
+                            <label for="size_{{ $size->id }}" class="form-check-label">{{ $size->name }}</label>
+                        </div>
                     @endforeach
-                </select>
+                </div>
                 @error('sizes')
+                <div class="text-danger">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="mb-3">
+                <label for="is_active" class="form-label">Статус</label>
+                <select name="is_active" id="is_active" class="form-control" required>
+                    <option value="1" {{ old('is_active', $product->is_active) == 1 ? 'selected' : '' }}>Активний</option>
+                    <option value="0" {{ old('is_active', $product->is_active) == 0 ? 'selected' : '' }}>Неактивний</option>
+                </select>
+                @error('is_active')
                 <div class="text-danger">{{ $message }}</div>
                 @enderror
             </div>

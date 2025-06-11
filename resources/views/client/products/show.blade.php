@@ -4,44 +4,37 @@
 
 @section('content')
     <div class="container">
-        <h3>{{ $product->name }}</h3>
-        @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
         <div class="row">
             <div class="col-md-6">
                 @if ($product->image_path)
-                    <img src="{{ asset($product->image_path) }}" alt="{{ $product->name }}" class="img-fluid" style="max-height: 400px; object-fit: cover;">
+                    <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}" class="img-fluid">
                 @else
-                    <img src="https://via.placeholder.com/400" alt="Placeholder" class="img-fluid" style="max-height: 400px; object-fit: cover;">
+                    <img src="{{ asset('images/placeholder.jpg') }}" alt="Placeholder" class="img-fluid">
                 @endif
             </div>
             <div class="col-md-6">
-                <p><strong>Ціна:</strong> {{ $product->price }} грн</p>
-                <p><strong>Опис:</strong> {{ $product->description ?? 'Немає опису' }}</p>
-                <p><strong>Наявність:</strong> {{ $product->stock > 0 ? 'В наявності (' . $product->stock . ' шт.)' : 'Немає в наявності' }}</p>
-                <form action="{{ route('cart.add', $product->id) }}" method="POST">
+                <h2>{{ $product->name }}</h2>
+                <p>{{ $product->description }}</p>
+                <p><strong>Ціна:</strong> {{ number_format($product->price, 2) }} грн</p>
+                <form action="{{ route('cart.store', $product->id) }}" method="POST">
                     @csrf
-                    @if ($product->colors->isNotEmpty())
-                        <div class="mb-3">
-                            <label for="color_id" class="form-label">Колір</label>
-                            <div class="d-flex flex-wrap">
-                                @foreach ($product->colors as $color)
-                                    <div class="form-check me-2">
-                                        <input type="radio" name="color_id" id="color_{{ $color->id }}" value="{{ $color->id }}" class="d-none color-radio" {{ $loop->first ? 'checked' : '' }}>
-                                        <label for="color_{{ $color->id }}" class="color-swatch" style="width: 30px; height: 30px; background-color: {{ $color->hex }}; border: 1px solid #ccc; display: block; cursor: pointer;" title="{{ $color->name }}"></label>
-                                    </div>
-                                @endforeach
-                            </div>
-                            @error('color_id')
-                            <div class="text-danger">{{ $message }}</div>
-                            @enderror
+                    <div class="mb-3">
+                        <label class="form-label">Колір</label>
+                        <div class="d-flex flex-wrap">
+                            @foreach ($product->colors as $color)
+                                <div class="form-check me-3">
+                                    <input class="form-check-input color-radio" type="radio" name="color_id" id="color_{{ $color->id }}" value="{{ $color->id }}" {{ request()->color_id == $color->id ? 'checked' : '' }} required>
+                                    <label class="form-check-label" for="color_{{ $color->id }}" style="background-color: {{ $color->hex ?? '#ffffff' }}; width: 30px; height: 30px; display: inline-block; border: 2px solid {{ request()->color_id == $color->id ? '#000' : '#ddd' }};" title="{{ $color->name }}"></label>
+                                </div>
+                            @endforeach
                         </div>
-                    @endif
+                        @error('color_id')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
                     <div class="mb-3">
                         <label for="size_id" class="form-label">Розмір</label>
                         <select name="size_id" id="size_id" class="form-control" required>
-                            <option value="">Виберіть розмір</option>
                             @foreach ($product->sizes as $size)
                                 <option value="{{ $size->id }}">{{ $size->name }}</option>
                             @endforeach
@@ -52,46 +45,27 @@
                     </div>
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Кількість</label>
-                        <input type="number" name="quantity" id="quantity" class="form-control" value="1" min="1" max="{{ $product->stock }}" required>
+                        <input type="number" name="quantity" id="quantity" class="form-control" value="1" min="1" required>
                         @error('quantity')
                         <div class="text-danger">{{ $message }}</div>
                         @enderror
                     </div>
-                    @if ($product->stock > 0)
-                        <button type="submit" class="btn btn-primary">Додати до кошика</button>
-                    @else
-                        <button type="button" class="btn btn-secondary" disabled>Немає в наявності</button>
-                    @endif
+                    <button type="submit" class="btn btn-primary">Додати до кошика</button>
                 </form>
+                <a href="{{ route('products.customize', $product->id) }}" class="btn btn-secondary mt-3">Кастомізувати</a>
             </div>
         </div>
     </div>
-@endsection
 
-@section('styles')
     <style>
-        .color-swatch {
-            transition: all 0.2s ease;
+        .color-radio {
+            display: none;
         }
-        .color-radio:checked + .color-swatch {
-            border: 2px solid #000;
-            transform: scale(1.2);
+        .form-check-label:hover {
+            border-color: #000 !important;
+        }
+        .form-check-input:checked + .form-check-label {
+            border-color: #000 !important;
         }
     </style>
-@endsection
-
-@section('scripts')
-    <script>
-        document.querySelectorAll('.color-radio').forEach(radio => {
-            radio.addEventListener('change', () => {
-                document.querySelectorAll('.color-swatch').forEach(swatch => {
-                    swatch.style.border = '1px solid #ccc';
-                    swatch.style.transform = 'scale(1)';
-                });
-                const selectedSwatch = radio.nextElementSibling;
-                selectedSwatch.style.border = '2px solid #000';
-                selectedSwatch.style.transform = 'scale(1.2)';
-            });
-        });
-    </script>
 @endsection

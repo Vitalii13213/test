@@ -23,10 +23,11 @@ class ColorController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'hex' => 'required|string|max:7',
+            'hex' => 'required|string|max:7|regex:/^#[0-9A-Fa-f]{6}$/',
         ]);
 
         Color::create($request->all());
+
         return redirect()->route('admin.color.index')->with('success', 'Колір додано.');
     }
 
@@ -40,11 +41,12 @@ class ColorController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'hex' => 'required|string|max:7',
+            'hex' => 'required|string|max:7|regex:/^#[0-9A-Fa-f]{6}$/',
         ]);
 
         $color = Color::findOrFail($id);
         $color->update($request->all());
+
         return redirect()->route('admin.color.index')->with('success', 'Колір оновлено.');
     }
 
@@ -52,6 +54,7 @@ class ColorController extends Controller
     {
         $color = Color::findOrFail($id);
         $color->delete();
+
         return redirect()->route('admin.color.index')->with('success', 'Колір видалено.');
     }
 }

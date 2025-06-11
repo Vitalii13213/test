@@ -1,15 +1,14 @@
 @extends('layouts.main')
 
-@section('title', 'Кольори')
+@section('title', 'Кольори - Адмін')
 
 @section('content')
-    <div class="container">
-        <h3>Кольори</h3>
-        <a href="{{ route('admin.color.create') }}" class="btn btn-primary mb-3">Додати колір</a>
-        @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-        @if ($colors->isEmpty())
+    <div class="container-fluid">
+        <h2>Кольори</h2>
+        <div class="mb-3">
+            <a href="{{ route('admin.color.create') }}" class="btn btn-primary">Додати колір</a>
+        </div>
+        @if($colors->isEmpty())
             <p>Кольори відсутні.</p>
         @else
             <table class="table table-bordered">
@@ -17,25 +16,25 @@
                 <tr>
                     <th>ID</th>
                     <th>Назва</th>
-                    <th>HEX</th>
+                    <th>Колір</th>
                     <th>Дії</th>
                 </tr>
                 </thead>
                 <tbody>
-                @foreach ($colors as $color)
+                @foreach($colors as $color)
                     <tr>
                         <td>{{ $color->id }}</td>
                         <td>{{ $color->name }}</td>
                         <td>
-                            <span style="width: 20px; height: 20px; background-color: {{ $color->hex }}; display: inline-block; border: 1px solid #ccc;"></span>
-                            {{ $color->hex }}
+                            <span style="display: inline-block; width: 30px; height: 30px; background-color: {{ $color->hex ?? '#ffffff' }}; border: 1px solid #ddd;"></span>
+                            {{ $color->hex ?? 'Немає' }}
                         </td>
                         <td>
-                            <a href="{{ route('admin.color.edit', $color->id) }}" class="btn btn-warning btn-sm">Редагувати</a>
-                            <form action="{{ route('admin.color.destroy', $color->id) }}" method="POST" style="display: inline;">
+                            <a href="{{ route('admin.color.edit', $color->id) }}" class="btn btn-sm btn-warning">Редагувати</a>
+                            <form action="{{ route('admin.color.destroy', $color->id) }}" method="POST" style="display:inline;">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Ви впевнені?')">Видалити</button>
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Ви впевнені?')">Видалити</button>
                             </form>
                         </td>
                     </tr>

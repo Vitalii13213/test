@@ -11,11 +11,22 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('category')->get();
-        $categories = Category::where('is_active', true)->get();
-        return view('admin.products.index', compact('products', 'categories'));
+        $showInactive = $request->query('show_inactive', false);
+        $categoryId = $request->query('category_id');
+        $categories = Category::all();
+
+        $query = Product::with(['category']);
+        if (!$showInactive) {
+            $query->where('is_active', true);
+        }
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+
+        $products = $query->get();
+        return view('admin.products.index', compact('products', 'showInactive', 'categories', 'categoryId'));
     }
 
     public function create()
@@ -30,85 +41,75 @@ class ProductController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-            'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
-            'is_active' => 'nullable|boolean',
+            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
             'colors' => 'nullable|array',
             'colors.*' => 'exists:colors,id',
             'sizes' => 'nullable|array',
             'sizes.*' => 'exists:sizes,id',
+            'is_active' => 'required|boolean',
         ]);
 
-        $product = Product::create([
-            'name' => $request->name,
-            'price' => $request->price,
-            'stock' => $request->stock,
-            'description' => $request->description,
-            'category_id' => $request->category_id,
-            'is_active' => $request->has('is_active') ? true : false,
-        ]);
-
+        $data = $request->all();
+        $data['is_active'] = $request->input('is_active', false);
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $product->update(['image' => $path]);
+            $data['image_path'] = $request->file('image')->store('products', 'public');
         }
 
-        if ($request->colors) {
+        $product = Product::create($data);
+        if ($request->has('colors')) {
             $product->colors()->sync($request->colors);
         }
-
-        if ($request->sizes) {
+        if ($request->has('sizes')) {
             $product->sizes()->sync($request->sizes);
         }
 
         return redirect()->route('admin.products.index')->with('success', 'Товар додано.');
     }
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         $product = Product::findOrFail($id);
         $categories = Category::where('is_active', true)->get();
         $colors = Color::all();
         $sizes = Size::all();
-        return view('admin.products.edit', compact('product', 'categories', 'colors', 'sizes'));
+        $showInactive = $request->query('show_inactive', false);
+        return view('admin.products.edit', compact('product', 'categories', 'colors', 'sizes', 'showInactive'));
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-            'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
-            'is_active' => 'nullable|boolean',
+            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
             'colors' => 'nullable|array',
             'colors.*' => 'exists:colors,id',
             'sizes' => 'nullable|array',
             'sizes.*' => 'exists:sizes,id',
+            'is_active' => 'required|boolean',
         ]);
 
         $product = Product::findOrFail($id);
-        $product->update([
-            'name' => $request->name,
-            'price' => $request->price,
-            'stock' => $request->stock,
-            'description' => $request->description,
-            'category_id' => $request->category_id,
-            'is_active' => $request->has('is_active') ? true : false,
-        ]);
-
+        $data = $request->all();
+        $data['is_active'] = $request->input('is_active', false);
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $product->update(['image' => $path]);
+            $data['image_path'] = $request->file('image')->store('products', 'public');
         }
 
-        $product->colors()->sync($request->colors ?: []);
-        $product->sizes()->sync($request->sizes ?: []);
+        $product->update($data);
+        if ($request->has('colors')) {
+            $product->colors()->sync($request->colors);
+        }
+        if ($request->has('sizes')) {
+            $product->sizes()->sync($request->sizes);
+        }
 
         return redirect()->route('admin.products.index')->with('success', 'Товар оновлено.');
     }
@@ -117,6 +118,7 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
         $product->delete();
+
         return redirect()->route('admin.products.index')->with('success', 'Товар видалено.');
     }
 }

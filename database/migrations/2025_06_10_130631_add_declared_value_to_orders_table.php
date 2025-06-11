@@ -9,9 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->decimal('declared_value', 10, 2)->after('shipment_description');
+            if (!Schema::hasColumn('orders', 'declared_value')) {
+                $table->decimal('declared_value', 10, 2)->after('shipment_description');
+            }
         });
     }
+
 
     public function down(): void
     {
