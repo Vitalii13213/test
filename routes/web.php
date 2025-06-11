@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\SizeController;
+use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
@@ -18,51 +19,49 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Головна сторінка
+// Главная страница
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/filter', [HomeController::class, 'filter'])->name('products.filter');
 
-// Товари
+// Товары
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products/{id}/customize', [ProductController::class, 'customize'])->name('products.customize');
 Route::post('/products/{id}/customize', [ProductController::class, 'storeCustomize'])->name('products.storeCustomize');
 
-// Категорії
-Route::get('/categories/{id}', [ProductController::class, 'index'])->name('categories.show');
+// Категории
+Route::get('/categories/{id}', [ProductController::class, 'showCategory'])->name('categories.show');
 
-// Кошик
+// Корзина
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add/{id}', [CartController::class, 'add'])->name('cart.add');
-Route::post('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
-Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
+Route::post('/cart/update/{cartKey}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('/cart/remove/{cartKey}', [CartController::class, 'remove'])->name('cart.remove');
 Route::delete('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
 // Чекаут
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 });
 
-// Аутентифікація
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Google авторизация
+Route::get('/auth/google', [SocialiteController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [SocialiteController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
-Route::middleware('auth')->group(function () {
+// Аутентификация
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Адмін-панель
+// Админ-панель
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
-    // Панель управління
     Route::get('/dashboard', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
 
-    // Товари
     Route::resource('products', AdminProductController::class)->names([
         'index' => 'admin.products.index',
         'create' => 'admin.products.create',
@@ -73,7 +72,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         'destroy' => 'admin.products.destroy',
     ]);
 
-    // Категорії
     Route::resource('categories', CategoryController::class)->names([
         'index' => 'admin.categories.index',
         'create' => 'admin.categories.create',
@@ -84,7 +82,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         'destroy' => 'admin.categories.destroy',
     ]);
 
-    // Кольори
     Route::resource('color', ColorController::class)->names([
         'index' => 'admin.color.index',
         'create' => 'admin.color.create',
@@ -95,7 +92,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         'destroy' => 'admin.color.destroy',
     ]);
 
-    // Розміри
     Route::resource('sizes', SizeController::class)->names([
         'index' => 'admin.sizes.index',
         'create' => 'admin.sizes.create',
@@ -106,7 +102,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         'destroy' => 'admin.sizes.destroy',
     ]);
 
-    // Замовлення
     Route::resource('orders', OrderController::class)->names([
         'index' => 'admin.orders.index',
         'create' => 'admin.orders.create',

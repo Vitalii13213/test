@@ -9,7 +9,7 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'price', 'stock', 'image', 'description', 'category_id', 'is_active'];
+    protected $fillable = ['name', 'price', 'stock', 'image_path', 'description', 'category_id', 'is_active'];
 
     public function category()
     {
@@ -29,11 +29,5 @@ class Product extends Model
     public function orders()
     {
         return $this->belongsToMany(Order::class)->withPivot('quantity', 'price', 'color_id', 'size_id');
-    }
-
-    public function storeCustomize(Request $request, $id)
-    {
-        // Логіка для кастомізації
-        return redirect()->route('products.show', $id)->with('success', 'Кастомізація збережено.');
     }
 }

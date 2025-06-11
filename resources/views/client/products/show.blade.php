@@ -10,8 +10,8 @@
         @endif
         <div class="row">
             <div class="col-md-6">
-                @if ($product->image)
-                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="img-fluid" style="max-height: 400px; object-fit: cover;">
+                @if ($product->image_path)
+                    <img src="{{ asset($product->image_path) }}" alt="{{ $product->name }}" class="img-fluid" style="max-height: 400px; object-fit: cover;">
                 @else
                     <img src="https://via.placeholder.com/400" alt="Placeholder" class="img-fluid" style="max-height: 400px; object-fit: cover;">
                 @endif
@@ -45,10 +45,10 @@
                             @foreach ($product->sizes as $size)
                                 <option value="{{ $size->id }}">{{ $size->name }}</option>
                             @endforeach
-                            @error('size_id')
-                            <div class="text-danger">{{ $message }}</div>
-                            @enderror
                         </select>
+                        @error('size_id')
+                        <div class="text-danger">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Кількість</label>

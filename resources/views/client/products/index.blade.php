@@ -1,16 +1,10 @@
 @extends('layouts.main')
 
-@section('title', 'Головна - StyleHub')
+@section('title', 'Товари - StyleHub')
 
 @section('content')
-    <section class="hero text-center mb-5">
-        <h1>Створи свій унікальний стиль!</h1>
-        <p>Обирай одяг або створюй футболки з власними принтами.</p>
-        <a href="{{ route('categories.show', 1) }}" class="btn btn-primary">Кастомізувати</a>
-    </section>
-
-    <section class="products mb-5">
-        <h2>Наші товари</h2>
+    <div class="container">
+        <h2>Товари</h2>
         @if($products->isEmpty())
             <p>Товари відсутні.</p>
         @else
@@ -52,6 +46,7 @@
                     </div>
                 @endforeach
             </div>
+            {{ $products->links() }}
         @endif
-    </section>
+    </div>
 @endsection

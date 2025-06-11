@@ -13,7 +13,7 @@ class HomeController extends Controller
         $categories = Category::where('is_active', true)->get();
         $products = Product::where('is_active', true)->with(['colors', 'sizes'])->take(10)->get();
         $title = 'StyleHub - Головна';
-        return view('layouts.main', compact('categories', 'products', 'title'));
+        return view('client.home.index', compact('categories', 'products', 'title'));
     }
 
     public function filter(Request $request)
@@ -45,7 +45,7 @@ class HomeController extends Controller
             });
         }
 
-        $products = $products->get();
-        return view('products.index', compact('products', 'categories'));
+        $products = $products->paginate(12);
+        return view('client.products.index', compact('products', 'categories'));
     }
 }

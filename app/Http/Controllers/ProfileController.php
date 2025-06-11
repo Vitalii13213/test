@@ -20,22 +20,25 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(Request $request): RedirectResponse
     {
-        $validated = $request->validated();
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $request->user()->id],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'full_name' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'nova_poshta_branch' => ['nullable', 'string', 'max:255'],
+        ]);
 
-        $request->user()->fill(array_merge($validated, [
-            'phone' => $request->phone,
-            'full_name' => $request->full_name,
-            'city' => $request->city,
-            'nova_poshta_branch' => $request->nova_poshta_branch,
-        ]));
+        $user = $request->user();
+        $user->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
