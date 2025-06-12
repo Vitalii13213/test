@@ -6,28 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $showInactive = $request->query('show_inactive', false);
-        Log::info('CategoryController::index', [
-            'show_inactive' => $showInactive,
-            'request_url' => $request->fullUrl(),
-        ]);
+        // Виправлене: коректно обробляємо show_inactive як булевий параметр
+        $showInactive = $request->boolean('show_inactive', false);
 
         $query = Category::query();
+
         if (!$showInactive) {
             $query->where('is_active', true);
         }
-        $categories = $query->get();
 
-        Log::info('Categories retrieved', [
-            'count' => $categories->count(),
-            'categories' => $categories->toArray(),
-        ]);
+        $categories = $query->get();
 
         return view('admin.categories.index', compact('categories', 'showInactive'));
     }
@@ -41,6 +34,7 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'is_active' => 'required|boolean',
         ]);
 
@@ -59,6 +53,7 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'is_active' => 'required|boolean',
         ]);
 
@@ -66,6 +61,7 @@ class CategoryController extends Controller
         $oldIsActive = $category->is_active;
         $category->update($request->all());
 
+        // Якщо категорія стала неактивною — деактивуємо її продукти
         if ($oldIsActive && !$request->is_active) {
             Product::where('category_id', $id)->update(['is_active' => false]);
         }

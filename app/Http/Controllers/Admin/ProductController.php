@@ -7,118 +7,144 @@ use App\Models\Category;
 use App\Models\Color;
 use App\Models\Product;
 use App\Models\Size;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 
 class ProductController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): View
     {
-        $showInactive = $request->query('show_inactive', false);
-        $categoryId = $request->query('category_id');
-        $categories = Category::all();
+        $showInactive = $request->boolean('show_inactive');
+        $categoryId = $request->input('category_id');
 
-        $query = Product::with(['category']);
+        $query = Product::query();
+
         if (!$showInactive) {
-            $query->where('is_active', true);
+            $query->where('is_active', true)
+                ->whereHas('category', function ($q) {
+                    $q->where('is_active', true);
+                });
         }
+
         if ($categoryId) {
             $query->where('category_id', $categoryId);
         }
 
-        $products = $query->get();
-        return view('admin.products.index', compact('products', 'showInactive', 'categories', 'categoryId'));
+        $products = $query->with('category')->latest()->get();
+        $categories = Category::all();
+
+        return view('admin.products.index', compact('products', 'categories', 'showInactive', 'categoryId'));
     }
 
-    public function create()
+    public function create(Request $request): View
     {
-        $categories = Category::where('is_active', true)->get();
+        $showInactive = $request->boolean('show_inactive');
+        $categories = $showInactive ? Category::all() : Category::where('is_active', true)->get();
         $colors = Color::all();
         $sizes = Size::all();
-        return view('admin.products.create', compact('categories', 'colors', 'sizes'));
+
+        return view('admin.products.create', compact('categories', 'colors', 'sizes', 'showInactive'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-            'colors' => 'nullable|array',
-            'colors.*' => 'exists:colors,id',
-            'sizes' => 'nullable|array',
-            'sizes.*' => 'exists:sizes,id',
-            'is_active' => 'required|boolean',
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'stock' => ['required', 'integer', 'min:0'],
+            'category_id' => ['required', 'exists:categories,id'],
+            'colors' => ['array', 'exists:colors,id'],
+            'sizes' => ['array', 'exists:sizes,id'],
+            'image' => ['nullable', 'image', 'max:2048'],
+            'is_active' => ['boolean'],
         ]);
 
-        $data = $request->all();
-        $data['is_active'] = $request->input('is_active', false);
-        if ($request->hasFile('image')) {
-            $data['image_path'] = $request->file('image')->store('products', 'public');
+        $imagePath = $request->file('image')
+            ? $request->file('image')->store('products', 'public')
+            : null;
+
+        $product = Product::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'price' => $validated['price'],
+            'stock' => $validated['stock'],
+            'category_id' => $validated['category_id'],
+            'image' => $imagePath,
+            'is_active' => $validated['is_active'] ?? true,
+        ]);
+
+        if (!empty($validated['colors'])) {
+            $product->colors()->sync($validated['colors']);
         }
 
-        $product = Product::create($data);
-        if ($request->has('colors')) {
-            $product->colors()->sync($request->colors);
-        }
-        if ($request->has('sizes')) {
-            $product->sizes()->sync($request->sizes);
+        if (!empty($validated['sizes'])) {
+            $product->sizes()->sync($validated['sizes']);
         }
 
-        return redirect()->route('admin.products.index')->with('success', 'Товар додано.');
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Товар успішно створено.');
     }
 
-    public function edit(Request $request, $id)
+    public function edit(Product $product, Request $request): View
     {
-        $product = Product::findOrFail($id);
-        $categories = Category::where('is_active', true)->get();
+        $showInactive = $request->boolean('show_inactive');
+        $categories = $showInactive ? Category::all() : Category::where('is_active', true)->get();
         $colors = Color::all();
         $sizes = Size::all();
-        $showInactive = $request->query('show_inactive', false);
+
         return view('admin.products.edit', compact('product', 'categories', 'colors', 'sizes', 'showInactive'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Product $product): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'image' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-            'colors' => 'nullable|array',
-            'colors.*' => 'exists:colors,id',
-            'sizes' => 'nullable|array',
-            'sizes.*' => 'exists:sizes,id',
-            'is_active' => 'required|boolean',
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'stock' => ['required', 'integer', 'min:0'],
+            'category_id' => ['required', 'exists:categories,id'],
+            'colors' => ['array', 'exists:colors,id'],
+            'sizes' => ['array', 'exists:sizes,id'],
+            'image' => ['nullable', 'image', 'max:2048'],
+            'is_active' => ['boolean'],
         ]);
 
-        $product = Product::findOrFail($id);
-        $data = $request->all();
-        $data['is_active'] = $request->input('is_active', false);
-        if ($request->hasFile('image')) {
-            $data['image_path'] = $request->file('image')->store('products', 'public');
+        if ($request->file('image')) {
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $validated['image'] = $request->file('image')->store('products', 'public');
         }
 
-        $product->update($data);
-        if ($request->has('colors')) {
-            $product->colors()->sync($request->colors);
-        }
-        if ($request->has('sizes')) {
-            $product->sizes()->sync($request->sizes);
-        }
+        $product->update([
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'price' => $validated['price'],
+            'stock' => $validated['stock'],
+            'category_id' => $validated['category_id'],
+            'image' => $validated['image'] ?? $product->image,
+            'is_active' => $validated['is_active'] ?? true,
+        ]);
 
-        return redirect()->route('admin.products.index')->with('success', 'Товар оновлено.');
+        $product->colors()->sync($validated['colors'] ?? []);
+        $product->sizes()->sync($validated['sizes'] ?? []);
+
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Товар успішно оновлено.');
     }
 
-    public function destroy($id)
+    public function destroy(Product $product): RedirectResponse
     {
-        $product = Product::findOrFail($id);
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+
         $product->delete();
 
-        return redirect()->route('admin.products.index')->with('success', 'Товар видалено.');
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Товар успішно видалено.');
     }
 }

@@ -15,12 +15,13 @@ class ProfileUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'surname' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'patronymic' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . Auth::id()],
             'phone' => ['nullable', 'string', 'max:20'],
-            'full_name' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:255'],
-            'nova_poshta_branch' => ['nullable', 'string', 'max:255'],
+            'delivery_point' => ['nullable', 'string', 'max:255'],
         ];
     }
 }
